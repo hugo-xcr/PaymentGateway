@@ -1,0 +1,44 @@
+﻿enum PaymentStatus {
+  INITIATED
+  CONFIRMED
+  FAILED
+  REFUNDED
+}
+
+input InitPaymentInput {
+  amount: Float!
+  currency: String!
+  method: String!
+  description: String
+}
+
+type PaymentRequest {
+  id: ID!
+  amount: Float!
+  currency: String!
+  method: String!
+  description: String
+  createdAt: DateTime!
+}
+
+type PaymentResult {
+  id: ID!
+  status: PaymentStatus!
+  transactionId: String
+  paymentRequest: PaymentRequest!
+  processedAt: DateTime
+}
+
+type Query {
+  payments(limit: Int = 10, offset: Int = 0): [PaymentResult!]!
+  payment(id: ID!): PaymentResult
+  healthCheck: String!
+}
+
+type Mutation {
+  initPayment(input: InitPaymentInput!): PaymentResult!
+}
+
+type Subscription {
+  paymentStatusChanged(id: ID!): PaymentResult!
+}
