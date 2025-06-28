@@ -49,15 +49,21 @@ dotnet run
 ## Примеры запросов
 
 1. Инициализация платежа
-```json
-{
-  "query": "mutation InitPayment($input: InitPaymentInput!) { initPayment(input: $input) { id status transactionId paymentRequest { amount currency method } } }",
-  "variables": {
-    "input": {
-      "amount": 99.99,
-      "currency": "USD",
-      "method": "CreditCard",
-      "description": "Покупка в интернет-магазине"
+```graphql
+mutation {
+  initPayment(input: {
+    amount: 99.99,
+    currency: "USD",
+    method: "CreditCard",
+    description: "Покупка в интернет-магазине"
+  }) {
+    id
+    status
+    transactionId
+    paymentRequest {
+      amount
+      currency
+      method
     }
   }
 }
@@ -81,10 +87,22 @@ dotnet run
 ```
 
 2.  Получение списка платежей
-```json
-{
-  "query": "query { payments { nodes { id status transactionId processedAt paymentRequest { amount currency method createdAt } } } }",
-  "variables": {}
+```graphql
+query {
+  payments {
+    nodes {
+      id
+      status
+      transactionId
+      processedAt
+      paymentRequest {
+        amount
+        currency
+        method
+        createdAt
+      }
+    }
+  }
 }
 ```
 **Ожидаемый ответ:**
@@ -219,12 +237,5 @@ dotnet run
 }
 ```
 
-3. Подписка на изменения статуса (WebSocket)
-```graphql
-
-```
-
-
-**Ожидаемый ответ:**
 
 
