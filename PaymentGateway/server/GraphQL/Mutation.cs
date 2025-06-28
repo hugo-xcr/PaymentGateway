@@ -6,44 +6,65 @@ using PaymentGateway.Server.Models;
 using System;
 using System.Threading.Tasks;
 
-namespace PaymentGateway.Server.GraphQL;
-
-public class Mutation
+namespace PaymentGateway.Server.GraphQL
 {
-    public async Task<PaymentResult> InitPayment(
-        InitPaymentInput input,
-        [Service] AppDbContext context)
+    public class Mutation
     {
-        var paymentRequest = new PaymentRequest
+        public async Task<PaymentResult> InitPayment(
+            InitPaymentInput input,
+            [Service] AppDbContext context)
         {
-            Id = Guid.NewGuid().ToString(),
-            Amount = (decimal)input.Amount,
-            Currency = input.Currency,
-            Method = input.Method,
-            Description = input.Description ?? string.Empty,
-            CreatedAt = DateTime.UtcNow
-        };
+            if (input.Amount <= 0)
+                throw new PaymentException("Amount must be positive");
 
-        var paymentResult = new PaymentResult
+            var paymentRequest = new PaymentRequest
+            {
+                Amount = (decimal)input.Amount,
+                Currency = input.Currency,
+                Method = input.Method,
+                Description = input.Description ?? string.Empty,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var paymentResult = new PaymentResult
+            {
+                Status = PaymentStatus.INITIATED,
+                TransactionId = "txn_" + Guid.NewGuid().ToString("N")[..16],
+                PaymentRequest = paymentRequest,
+                ProcessedAt = DateTime.UtcNow
+            };
+
+            context.PaymentResults.Add(paymentResult);
+            await context.SaveChangesAsync();
+
+            return paymentResult;
+        }
+
+        public async Task<PaymentResult> ConfirmPayment(
+            [ID] string id,
+            [Service] AppDbContext context)
         {
-            Id = Guid.NewGuid().ToString(),
-            Status = PaymentStatus.INITIATED,
-            TransactionId = Guid.NewGuid().ToString("N")[..16],
-            PaymentRequest = paymentRequest, // Теперь типы совместимы
-            PaymentRequestId = paymentRequest.Id,
-            ProcessedAt = DateTime.UtcNow
-        };
+            var payment = await context.PaymentResults
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-        context.PaymentRequests.Add(paymentRequest);
-        context.PaymentResults.Add(paymentResult);
-        await context.SaveChangesAsync();
+            if (payment == null)
+                throw new PaymentException("Payment not found");
 
-        return paymentResult;
+            payment.Status = PaymentStatus.CONFIRMED;
+            await context.SaveChangesAsync();
+
+            return payment;
+        }
+    }
+
+    public record InitPaymentInput(
+        double Amount,
+        string Currency,
+        string Method,
+        string? Description = null);
+
+    public class PaymentException : Exception
+    {
+        public PaymentException(string message) : base(message) { }
     }
 }
-
-public record InitPaymentInput(
-    double Amount,
-    string Currency,
-    string Method,
-    string? Description = null);

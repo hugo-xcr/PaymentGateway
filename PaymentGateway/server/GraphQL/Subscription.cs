@@ -1,11 +1,19 @@
-﻿using PaymentGateway.Client.Models;
+﻿using HotChocolate;
+using HotChocolate.Types;
 using PaymentGateway.Server.Models;
+using System.Threading.Tasks;
 
-public class Subscription
+namespace PaymentGateway.Server.GraphQL
 {
-    [Subscribe]
-    public PaymentResult PaymentStatusChanged(
-        [ID] string id,
-        [EventMessage] PaymentResult payment)
-        => payment;
+    public class Subscription
+    {
+        [Subscribe]
+        [Topic("{paymentId}")]
+        public PaymentResult PaymentStatusChanged(
+            [ID] string paymentId,
+            [EventMessage] PaymentResult payment)
+        {
+            return payment;
+        }
+    }
 }

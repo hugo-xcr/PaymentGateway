@@ -1,5 +1,4 @@
-﻿// PaymentGateway.Client/Models/PaymentRequestDto.cs
-namespace PaymentGateway.Client.Models;
+﻿namespace PaymentGateway.Client.Models;
 
 public class PaymentRequestDto
 {

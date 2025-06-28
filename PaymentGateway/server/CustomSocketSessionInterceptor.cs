@@ -42,7 +42,6 @@ public class CustomSocketSessionInterceptor : ISocketSessionInterceptor
         OperationRequestBuilder requestBuilder,
         CancellationToken cancellationToken)
     {
-        // Самый надежный способ - через рефлексию
         var contextData = requestBuilder.GetType().GetProperty("ContextData")?
             .GetValue(requestBuilder) as IDictionary<string, object?>;
 

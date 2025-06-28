@@ -4,7 +4,6 @@ using HotChocolate.Data.Filters;
 using HotChocolate.Data.Sorting;
 using HotChocolate.Types;
 using Microsoft.EntityFrameworkCore;
-using PaymentGateway.Client.Models;
 using PaymentGateway.Server.Data;
 using PaymentGateway.Server.Models;
 using System.Linq;
@@ -17,16 +16,11 @@ namespace PaymentGateway.Server.GraphQL
         [UsePaging]
         [HotChocolate.Data.UseFiltering(typeof(PaymentResultFilterType))]
         [HotChocolate.Data.UseSorting(typeof(PaymentResultSortType))]
-        public IQueryable<PaymentResult> GetPayments(
-            [Service] AppDbContext context,
-            int limit = 10,
-            int offset = 0)
+        public IQueryable<PaymentResult> GetPayments([Service] AppDbContext context)
         {
             return context.PaymentResults
                 .Include(p => p.PaymentRequest)
-                .OrderByDescending(p => p.ProcessedAt)
-                .Skip(offset)
-                .Take(limit);
+                .OrderByDescending(p => p.ProcessedAt);
         }
 
         public async Task<PaymentResult?> GetPayment(
@@ -48,6 +42,17 @@ namespace PaymentGateway.Server.GraphQL
             descriptor.BindFieldsExplicitly();
             descriptor.Field(f => f.Status);
             descriptor.Field(f => f.ProcessedAt);
+            descriptor.Field(f => f.PaymentRequest).Type<PaymentRequestFilterType>();
+        }
+    }
+
+    public class PaymentRequestFilterType : FilterInputType<PaymentRequest>
+    {
+        protected override void Configure(IFilterInputTypeDescriptor<PaymentRequest> descriptor)
+        {
+            descriptor.BindFieldsExplicitly();
+            descriptor.Field(f => f.Amount);
+            descriptor.Field(f => f.Currency);
         }
     }
 
@@ -57,6 +62,17 @@ namespace PaymentGateway.Server.GraphQL
         {
             descriptor.BindFieldsExplicitly();
             descriptor.Field(f => f.ProcessedAt);
+            descriptor.Field(f => f.PaymentRequest).Type<PaymentRequestSortType>();
+        }
+    }
+
+    public class PaymentRequestSortType : SortInputType<PaymentRequest>
+    {
+        protected override void Configure(ISortInputTypeDescriptor<PaymentRequest> descriptor)
+        {
+            descriptor.BindFieldsExplicitly();
+            descriptor.Field(f => f.Amount);
+            descriptor.Field(f => f.CreatedAt);
         }
     }
 }

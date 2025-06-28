@@ -1,5 +1,4 @@
-﻿// PaymentGateway.Server/Models/PaymentResult.cs
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -20,6 +19,5 @@ public class PaymentResult
     [ForeignKey("PaymentRequest")]
     public string PaymentRequestId { get; set; }
 
-    // Изменяем тип на серверную модель
     public PaymentRequest PaymentRequest { get; set; }
 }
