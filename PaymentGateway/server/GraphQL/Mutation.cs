@@ -1,4 +1,5 @@
 ﻿using HotChocolate;
+using HotChocolate.Subscriptions;
 using HotChocolate.Types;
 using Microsoft.EntityFrameworkCore;
 using PaymentGateway.Server.Data;
@@ -10,6 +11,18 @@ namespace PaymentGateway.Server.GraphQL
 {
     public class Mutation
     {
+        public async Task<PaymentResult> ConfirmPayment(
+    string id,
+    [Service] AppDbContext db,
+    [Service] ITopicEventSender eventSender)
+        {
+            var payment = await db.PaymentResults.FindAsync(id);
+            payment.Status = PaymentStatus.CONFIRMED;
+            await db.SaveChangesAsync();
+
+            await eventSender.SendAsync(id, payment); 
+            return payment;
+        }
         public async Task<PaymentResult> InitPayment(
             InitPaymentInput input,
             [Service] AppDbContext context)
@@ -67,4 +80,5 @@ namespace PaymentGateway.Server.GraphQL
     {
         public PaymentException(string message) : base(message) { }
     }
+
 }
